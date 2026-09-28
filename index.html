@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Scheda Collaudo Completa</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@700&display=swap');
+
+  body {
+    margin: 0; padding: 0;
+    font-family: 'Roboto', sans-serif;
+    background-color: #121212; color: #e0e0e0;
+    display: flex; flex-direction: column; align-items: center;
+    padding-top: 20px; padding-bottom: 120px;
+  }
+
+  .sheet-container {
+    width: 96%; max-width: 1400px;
+    background-color: #1e1e1e; padding: 20px;
+    border: 1px solid #333; border-radius: 8px; margin-bottom: 20px;
+  }
+
+  h1 { font-size: 20px; color: #fff; text-align: center; text-transform: uppercase; }
+  h2 { border-bottom: 2px solid #4caf50; font-size: 16px; color: #fff; margin-top: 30px; text-transform: uppercase; }
+
+  select option {
+    background-color: #1e1e1e;
+    color: #fff;
+  }
+
+  input, select, textarea {
+    background: transparent; border: none; border-bottom: 1px solid #555;
+    color: #fff; width: 100%; font-size: 14px; padding: 5px;
+  }
+  
+  /* Stile delle etichette (Label) sopra i campi */
+  label { font-size: 10px; color: #4caf50; font-weight: bold; display: block; margin-top: 5px; margin-bottom: 2px; text-transform: uppercase;}
+
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+  .full-width { grid-column: span 3; }
+
+  .measure-table { width: 100%; border-collapse: separate; border-spacing: 0; margin-top: 10px; }
+  .measure-table th { background: #2c2c2c; color: #fff; padding: 8px; font-size: 11px; text-align: left; }
+  .measure-table td { background: #1e1e1e; border-bottom: 1px solid #333; padding: 8px; vertical-align: top; }
+
+  .btn-del { 
+    background: #442222 !important; color: #ff4444 !important; border: 1px solid #ff4444 !important; 
+    width: 32px; height: 32px; cursor: pointer; font-weight: bold; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center; margin-top: 16px;
+  }
+
+  .iso-flex, .gen-flex { display: flex; gap: 4px; flex-wrap: wrap; }
+  .iso-flex select, .gen-flex select { background: #111; border: 1px solid #444; border-radius: 4px; color: #fff; height: 35px; flex: 1; min-width: 35px;}
+  .manual-flex { display: flex; gap: 4px; flex-wrap: wrap; }
+  .manual-flex input { flex: 1; min-width: 35px; }
+  
+  .esito-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; background: #333; text-align: center; min-width: 30px; display: inline-block;}
+  .esito-ok { color: #00c853; border: 1px solid #00c853; background: rgba(0,200,83,0.1); }
+  .esito-no { color: #d32f2f; border: 1px solid #d32f2f; background: rgba(211,47,47,0.1); }
+
+  .bottom-bar { position: fixed; bottom: 0; left: 0; width: 100%; height: 70px; background: #1e1e1e; border-top: 1px solid #333; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 0 10px; box-sizing: border-box; z-index: 1000; }
+  button { padding: 12px 20px; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; color: #fff; text-transform: uppercase; }
+  .btn-print { background: #00c853; }
+  .btn-reset { background: #d32f2f; }
+
+  /* MEDIA QUERY PER SMARTPHONE (LAYOUT A SCHEDE) */
+  @media (max-width: 768px) {
+    .measure-table thead { display: none; }
+    .measure-table, .measure-table tbody { display: block; width: 100%; }
+    
+    .measure-table tr { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 15px 10px; 
+      background: #252525; 
+      padding: 15px; 
+      border-radius: 8px; 
+      margin-bottom: 20px;
+      border: 1px solid #444;
+      position: relative;
+    }
+    
+    .measure-table td { border: none; padding: 0; display: flex; flex-direction: column; background: transparent; justify-content: flex-end;}
+    
+    .measure-table td:nth-child(1) { grid-column: span 2; font-weight: bold; border-bottom: 1px solid #4caf50; padding-bottom: 5px; color: #4caf50; font-size: 14px;}
+    .measure-table td:nth-child(1)::before { content: "QUOTA N° "; }
+    
+    .measure-table td:nth-child(2), .measure-table td:nth-child(3) { grid-column: span 1; }
+    
+    .measure-table td:nth-child(4) { grid-column: span 2; }
+    
+    .iso-flex, .manual-flex, .gen-flex { flex-direction: row; width: 100%; gap: 10px; flex-wrap: nowrap;}
+    .iso-flex select, .gen-flex select { height: 45px; font-size: 16px; padding: 5px; flex: 1; text-align: center; background: #111; }
+    .manual-flex input { height: 45px; font-size: 16px; flex: 1; text-align: center; background: #111;}
+    
+    .measure-table td:nth-child(5) input, .measure-table td:nth-child(6) input { background: #1e1e1e; border-radius: 4px; padding: 10px 5px; text-align: center;}
+    
+    .measure-table td:nth-child(7) { grid-column: span 2; }
+    .measure-table td:nth-child(7) input { height: 45px; font-size: 18px; text-align: center; background: #111; border: 1px solid #4caf50; border-radius: 4px;}
+    
+    .measure-table td:nth-child(8) { justify-content: center; align-items: center;}
+    .measure-table td:nth-child(8) .esito-badge { width: 100%; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 16px; margin-top:0;}
+    .measure-table td:nth-child(9) { justify-content: center; align-items: flex-end;}
+    .measure-table td:nth-child(9) .btn-del { width: 100%; height: 40px; margin-top:0;}
+  }
+</style>
+
+<script>
+  // DATABASE ISO 286 COMPLETO
+  const isoRanges = [3, 6, 10, 18, 30, 50, 80, 120, 180, 9999];
+  
+  // Gradi di Tolleranza da IT1 a IT18 (Micron)
+  const itGrades = {
+    1: [0.8, 1, 1, 1.2, 1.5, 1.5, 2, 2.5, 3],
+    2: [1.2, 1.5, 1.5, 2, 2.5, 2.5, 3, 4, 5],
+    3: [2, 2.5, 2.5, 3, 4, 4, 5, 6, 8],
+    4: [3, 4, 4, 5, 6, 7, 8, 10, 12],
+    5: [4, 5, 6, 8, 9, 11, 13, 15, 18],
+    6: [6, 8, 9, 11, 13, 16, 19, 22, 25], 
+    7: [10, 12, 15, 18, 21, 25, 30, 35, 40],
+    8: [14, 18, 22, 27, 33, 39, 46, 54, 63], 
+    9: [25, 30, 36, 43, 52, 62, 74, 87, 100],
+    10: [40, 48, 58, 70, 84, 100, 120, 140, 160], 
+    11: [60, 75, 90, 110, 130, 160, 190, 220, 250],
+    12: [100, 120, 150, 180, 210, 250, 300, 350, 400],
+    13: [140, 180, 220, 270, 330, 390, 460, 540, 630],
+    14: [250, 300, 360, 430, 520, 620, 740, 870, 1000],
+    15: [400, 480, 580, 700, 840, 1000, 1200, 1400, 1600],
+    16: [600, 750, 900, 1100, 1300, 1600, 1900, 2200, 2500],
+    17: [1000, 1200, 1500, 1800, 2100, 2500, 3000, 3500, 4000],
+    18: [1400, 1800, 2200, 2700, 3300, 3900, 4600, 5400, 6300]
+  };
+
+  // Scostamenti Fondamentali (Alberi - Micron)
+  const deviations = {
+    'a': [-270, -270, -280, -290, -300, -320, -340, -380, -460],
+    'b': [-140, -140, -150, -150, -160, -170, -190, -220, -240],
+    'c': [-60, -70, -80, -95, -110, -130, -150, -170, -210],
+    'd': [-20, -30, -40, -50, -65, -80, -100, -120, -145],
+    'e': [-14, -20, -25, -32, -40, -50, -60, -72, -85],
+    'f': [-6, -10, -13, -16, -20, -25, -30, -36, -43],
+    'g': [-2, -4, -5, -6, -7, -9, -10, -12, -14],
+    'h': [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    'k': [0, 1, 1, 1, 2, 2, 2, 3, 3],
+    'm': [2, 4, 6, 7, 8, 11, 13, 15, 17],
+    'n': [4, 8, 10, 12, 15, 17, 20, 23, 27],
+    'p': [6, 12, 15, 18, 22, 26, 32, 37, 43],
+    'r': [10, 14, 19, 23, 28, 34, 41, 48, 53],
+    's': [14, 19, 23, 28, 35, 43, 53, 64, 77],
+    't': [18, 23, 28, 33, 41, 51, 66, 79, 98],
+    'u': [22, 28, 33, 40, 48, 60, 78, 96, 118]
+  };
+
+  // Generatore della Logica di Tolleranza ISO 286
+  function getTolerance(nom, type, letter, grade) {
+    if(!nom || nom <= 0) return null;
+    let idx = 0;
+    for(let i=0; i<isoRanges.length; i++) { if(nom <= isoRanges[i]) { idx = i; break; } }
+    
+    const IT = itGrades[grade][idx]; 
+    const isHole = (type === 'hole');
+    const lowerLetter = letter.toLowerCase();
+    
+    if(!IT) return null;
+
+    if(lowerLetter === 'js') {
+      return { sup: (IT/2)/1000, inf: -(IT/2)/1000 };
+    }
+    
+    const fund = deviations[lowerLetter];
+    if(!fund) return null;
+    
+    let fd = fund[idx]; 
+    let sup, inf;
+    
+    if(!isHole) {
+      if(['a','b','c','d','e','f','g','h'].includes(lowerLetter)) {
+        sup = fd; inf = sup - IT;
+      } else {
+        inf = fd; sup = inf + IT;
+      }
+    } 
+    else {
+      if(['a','b','c','d','e','f','g','h'].includes(lowerLetter)) {
+        inf = -fd; sup = inf + IT;
+      } else {
+        sup = -fd; inf = sup - IT;
+      }
+    }
+    
+    return { sup: sup/1000, inf: inf/1000 };
+  }
+
+  // Generatore della Logica Tolleranze Generali ISO 2768
+  function getGeneralTolerance(nom, grade) {
+    if(!nom || nom <= 0) return null;
+    if(nom >= 0.5 && nom <= 3) {
+        if(grade==='f') return 0.05; if(grade==='m') return 0.1; if(grade==='c') return 0.2; if(grade==='v') return null;
+    } else if(nom > 3 && nom <= 6) {
+        if(grade==='f') return 0.05; if(grade==='m') return 0.1; if(grade==='c') return 0.3; if(grade==='v') return 0.5;
+    } else if(nom > 6 && nom <= 30) {
+        if(grade==='f') return 0.1; if(grade==='m') return 0.2; if(grade==='c') return 0.5; if(grade==='v') return 1.0;
+    } else if(nom > 30 && nom <= 120) {
+        if(grade==='f') return 0.15; if(grade==='m') return 0.3; if(grade==='c') return 0.8; if(grade==='v') return 1.5;
+    } else if(nom > 120 && nom <= 400) {
+        if(grade==='f') return 0.2; if(grade==='m') return 0.5; if(grade==='c') return 1.2; if(grade==='v') return 2.5;
+    } else if(nom > 400 && nom <= 1000) {
+        if(grade==='f') return 0.3; if(grade==='m') return 0.8; if(grade==='c') return 2.0; if(grade==='v') return 4.0;
+    } else if(nom > 1000 && nom <= 2000) {
+        if(grade==='f') return 0.5; if(grade==='m') return 1.2; if(grade==='c') return 3.0; if(grade==='v') return 6.0;
+    } else if(nom > 2000 && nom <= 4000) {
+        if(grade==='f') return null; if(grade==='m') return 2.0; if(grade==='c') return 4.0; if(grade==='v') return 8.0;
+    }
+    return null;
+  }
+
+  function addRow() {
+    const tbody = document.getElementById('measureBody');
+    const n = tbody.querySelectorAll('tr').length + 1;
+    const tr = document.createElement('tr');
+    tr.className = 'measure-row';
+    
+    let gradeOptions = '';
+    for(let i=1; i<=18; i++) {
+        gradeOptions += `<option value="${i}" ${i===7?'selected':''}>${i}</option>`;
+    }
+
+    // Aggiunte tutte le etichette <label> sopra agli input per una lettura uniforme e chiara
+    tr.innerHTML = `
+      <td class="col-n" style="font-weight:bold; font-size:16px; text-align:center; vertical-align:middle;">${n}</td>
+      <td>
+        <label>Nominale</label>
+        <input type="number" class="inp-nom" oninput="calcRow(this)">
+      </td>
+      <td>
+        <label>Modo</label>
+        <select class="mode-select" onchange="switchMode(this)">
+          <option value="iso">ISO</option>
+          <option value="gen">Gen</option>
+          <option value="manual">Man</option>
+        </select>
+      </td>
+      <td>
+        <label>Tolleranza</label>
+        <div class="iso-flex">
+          <select class="iso-type" onchange="updateLetters(this)"><option value="hole">Foro</option><option value="shaft">Albero</option></select>
+          <select class="iso-letter" onchange="calcRow(this)"></select>
+          <select class="iso-grade" onchange="calcRow(this)">${gradeOptions}</select>
+        </div>
+        <div class="gen-flex" style="display:none;">
+          <select class="gen-grade" onchange="calcRow(this)">
+            <option value="f">f (Fine)</option>
+            <option value="m" selected>m (Media)</option>
+            <option value="c">c (Grossa)</option>
+            <option value="v">v (Molto G.)</option>
+          </select>
+        </div>
+        <div class="manual-flex" style="display:none;">
+          <input type="number" class="inp-sup" placeholder="+S" step="0.001" oninput="calcRow(this)">
+          <input type="number" class="inp-inf" placeholder="-I" step="0.001" oninput="calcRow(this)">
+        </div>
+      </td>
+      <td>
+        <label>MAX</label>
+        <input type="text" class="val-max" readonly style="color:#aaa; border:none; text-align:center;">
+      </td>
+      <td>
+        <label>MIN</label>
+        <input type="text" class="val-min" readonly style="color:#aaa; border:none; text-align:center;">
+      </td>
+      <td>
+        <label>Misura</label>
+        <input type="number" class="inp-meas" step="0.01" oninput="calcRow(this)" style="font-weight:bold; border-bottom:1px solid #4caf50; text-align:center;">
+      </td>
+      <td style="text-align:center;">
+        <label>Esito</label>
+        <div style="margin-top:8px;"><span class="esito-badge">-</span></div>
+      </td>
+      <td>
+        <button class="btn-del" onclick="this.closest('tr').remove()">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+    updateLetters(tr.querySelector('.iso-type'));
+  }
+
+  function switchMode(sel) {
+    const row = sel.closest('tr');
+    const mode = sel.value;
+    row.querySelector('.iso-flex').style.display = (mode === 'iso') ? 'flex' : 'none';
+    row.querySelector('.gen-flex').style.display = (mode === 'gen') ? 'flex' : 'none';
+    row.querySelector('.manual-flex').style.display = (mode === 'manual') ? 'flex' : 'none';
+    calcRow(sel);
+  }
+
+  function updateLetters(typeSel) {
+    const row = typeSel.closest('tr');
+    const letterSel = row.querySelector('.iso-letter');
+    letterSel.innerHTML = "";
+    const baseLetters = ['a','b','c','d','e','f','g','h','js','k','m','n','p','r','s','t','u'];
+    const opts = (typeSel.value === 'hole') ? baseLetters.map(l => l.toUpperCase()) : baseLetters;
+    
+    opts.forEach(l => { 
+      const opt = document.createElement('option'); 
+      opt.value = l; 
+      opt.innerText = l; 
+      if(l.toLowerCase() === 'h') opt.selected = true; 
+      letterSel.appendChild(opt); 
+    });
+    calcRow(typeSel);
+  }
+
+  function calcRow(el) {
+    const row = el.closest('tr');
+    const nom = parseFloat(row.querySelector('.inp-nom').value);
+    const mode = row.querySelector('.mode-select').value;
+    const meas = parseFloat(row.querySelector('.inp-meas').value);
+    let max = null, min = null;
+    
+    if(!isNaN(nom)) {
+      if(mode === 'iso') {
+        const t = getTolerance(nom, row.querySelector('.iso-type').value, row.querySelector('.iso-letter').value, row.querySelector('.iso-grade').value);
+        if(t) { max = nom + t.sup; min = nom + t.inf; }
+      } 
+      else if(mode === 'gen') {
+        const t = getGeneralTolerance(nom, row.querySelector('.gen-grade').value);
+        if(t !== null) { max = nom + t; min = nom - t; }
+      } 
+      else if(mode === 'manual') {
+        const s = parseFloat(row.querySelector('.inp-sup').value);
+        const i = parseFloat(row.querySelector('.inp-inf').value);
+        if(!isNaN(s) && !isNaN(i)) { 
+          max = nom + s; 
+          min = nom - Math.abs(i); 
+        }
+      }
+    }
+    
+    row.querySelector('.val-max').value = max !== null ? max.toFixed(3) : "-";
+    row.querySelector('.val-min').value = min !== null ? min.toFixed(3) : "-";
+    const b = row.querySelector('.esito-badge');
+    
+    if(max !== null && !isNaN(meas)) {
+      if(meas <= (max + 0.0001) && meas >= (min - 0.0001)) { b.innerText = "OK"; b.className = "esito-badge esito-ok"; } 
+      else { b.innerText = "NO"; b.className = "esito-badge esito-no"; }
+    } else { b.innerText = "-"; b.className = "esito-badge"; }
+  }
+
+  async function generatePDF() {
+    const { jsPDF } = window.jspdf; 
+    const doc = new jsPDF();
+    
+    doc.setFontSize(16); 
+    doc.text("REPORT DI COLLAUDO", 105, 15, { align: "center" });
+    doc.setFontSize(10);
+    doc.text(`Allievo: ${document.getElementById('stdName').value}`, 14, 25);
+    doc.text(`Classe: ${document.getElementById('stdClass').value}`, 14, 32);
+
+    const rows = [];
+    document.querySelectorAll('.measure-row').forEach(row => {
+      rows.push([
+        row.querySelector('.col-n').innerText, 
+        row.querySelector('.inp-nom').value,
+        row.querySelector('.val-max').value, 
+        row.querySelector('.val-min').value,
+        row.querySelector('.inp-meas').value, 
+        row.querySelector('.esito-badge').innerText
+      ]);
+    });
+
+    doc.autoTable({ 
+      startY: 40, 
+      head: [['N', 'Nominale', 'Max', 'Min', 'Misura', 'Esito']], 
+      body: rows,
+      theme: 'grid',
+      headStyles: { fillColor: [44, 44, 44] }
+    });
+
+    let currentY = doc.lastAutoTable.finalY + 15;
+    const noteText = document.getElementById('studentNotes').value;
+    if (noteText) {
+      if (currentY > 250) { doc.addPage(); currentY = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.text("NOTE E OSSERVAZIONI:", 14, currentY);
+      doc.setFont("helvetica", "normal");
+      const splitNotes = doc.splitTextToSize(noteText, 180);
+      doc.text(splitNotes, 14, currentY + 7);
+      currentY += (splitNotes.length * 5) + 15;
+    }
+
+    doc.save("Collaudo_Officina.pdf");
+  }
+</script>
+</head>
+<body onload="addRow()">
+  <div class="sheet-container">
+    <h1>Scheda di Collaudo Officina</h1>
+    <div class="info-grid">
+      <div><label>Nome Allievo</label><input type="text" id="stdName"></div>
+      <div><label>Classe</label><input type="text" id="stdClass"></div>
+      <div><label>Data</label><input type="date" id="stdDate"></div>
+    </div>
+
+    <h2>1. Misure</h2>
+    <table class="measure-table"><tbody id="measureBody"></tbody></table>
+    <button onclick="addRow()" style="background:#2979ff; width:100%; margin-top:10px;">+ AGGIUNGI QUOTA</button>
+
+    <h2>2. Note</h2>
+    <textarea id="studentNotes" rows="3"></textarea>
+  </div>
+
+  <div class="bottom-bar">
+    <button class="btn-print" onclick="generatePDF()">SCARICA PDF</button>
+    <button class="btn-reset" onclick="location.reload()">RESET</button>
+  </div>
+</body>
+</html>
